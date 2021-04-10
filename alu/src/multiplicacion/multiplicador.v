@@ -21,7 +21,7 @@
 module multiplicador( input [2:0] MR, 
 							 input [2:0] MD, 
 							input init, 
-							 input clk,  
+							 input clk_1,  
 							 output reg [5:0] pp, 
 							 output reg done
     );
@@ -32,15 +32,16 @@ reg add;
 reg [5:0] A;
 reg [2:0] B;
 wire z;
+reg [7:0]contador;
 
 reg [2:0] status =0;
 
 // bloque comparador 
 assign z=(B==0)?1:0;
-
+div_freq(clk_1,clk);
 
 //bloques de registros de desplazamiento para A y B
-always @(posedge clk) begin
+always @(negedge clk_1) begin
    
 	if (rst) begin
 		A = {3'b000,MD};
@@ -56,7 +57,7 @@ always @(posedge clk) begin
 end 
 
 //bloque de add pp
-always @(posedge clk) begin
+always @(negedge clk_1) begin
    
 	if (rst) begin
 		pp =0;
@@ -68,11 +69,16 @@ always @(posedge clk) begin
 	end
 
 end
-
+always @(posedge clk) begin
+          if (rst ==1) 
+          contador =0;
+          else 
+          contador = contador + 1;
+end
 // FSM 
 parameter START =0,  CHECK =1, ADD =2, SHIFT =3, END1 =4;
 
-always @(posedge clk) begin
+always @(posedge clk_1) begin
 	case (status)
 	START: begin
 		sh=0;
@@ -115,13 +121,13 @@ always @(posedge clk) begin
 		rst =0;
 		sh =0;
 		add =0;
+		if(contador==1)
+		begin
 		status =START;
+		end
 	end
 	 default:
 		status =START;
 	endcase 
-	
-end 
-
-
+	end 
 endmodule
